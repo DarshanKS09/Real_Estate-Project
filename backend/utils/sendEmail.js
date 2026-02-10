@@ -1,34 +1,39 @@
-import nodemailer from "nodemailer";
+export const sendOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
 
-export const sendOtpEmail = async (to, otp) => {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    throw new Error("EMAIL_USER or EMAIL_PASS missing in environment");
+    if (!email) {
+      return res.status(400).json({ message: "Email required" });
+    }
+
+    const otp = generateOtp();
+    const hashedOtp = await bcrypt.hash(otp, 10);
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      user = new User({
+        email,
+        role: "user", // temp role
+        isVerified: false,
+        isActive: true,
+      });
+    }
+
+    user.otp = hashedOtp;
+    user.otpExpires = Date.now() + 5 * 60 * 1000;
+
+    await user.save();
+
+    // 🔥 THIS IS WHERE IT FAILS
+    await sendOtpEmail(email, otp);
+
+    return res.json({ message: "OTP sent to email" });
+  } catch (error) {
+    console.error("SEND OTP FAILED 👉", error); // 👈 IMPORTANT
+    return res.status(500).json({
+      message: "Failed to send OTP",
+      error: error.message, // expose reason
+    });
   }
-
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS, // MUST be App Password
-    },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 10000,
-  });
-
-  // 🔎 VERIFY SMTP CONNECTION FIRST
-  await transporter.verify();
-
-  // 📧 SEND MAIL
-  await transporter.sendMail({
-    from: `"Real Estate App" <${process.env.EMAIL_USER}>`,
-    to,
-    subject: "Your OTP Code",
-    html: `
-      <h2>Email Verification</h2>
-      <p>Your OTP is:</p>
-      <h1>${otp}</h1>
-      <p>This OTP expires in 5 minutes.</p>
-    `,
-  });
 };
