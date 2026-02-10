@@ -1,17 +1,25 @@
 import axios from "axios";
 
 export const sendOtpEmail = async (to, otp) => {
-  if (!process.env.BREVO_API_KEY) {
+  const apiKey = process.env.BREVO_API_KEY;
+  const senderEmail = process.env.BREVO_SENDER_EMAIL;
+
+  // 🔒 Fail fast — no silent crashes
+  if (!apiKey) {
     throw new Error("BREVO_API_KEY missing in environment variables");
   }
 
+  if (!senderEmail) {
+    throw new Error("BREVO_SENDER_EMAIL missing in environment variables");
+  }
+
   try {
-    await axios.post(
+    const response = await axios.post(
       "https://api.brevo.com/v3/smtp/email",
       {
         sender: {
           name: "Real Estate App",
-          email: process.env.BREVO_SENDER_EMAIL, // ✅ REAL EMAIL
+          email: senderEmail, // MUST be verified in Brevo
         },
         to: [
           {
@@ -28,17 +36,22 @@ export const sendOtpEmail = async (to, otp) => {
       },
       {
         headers: {
-          "api-key": process.env.BREVO_API_KEY,
+          "api-key": apiKey,
           "Content-Type": "application/json",
+          Accept: "application/json",
         },
         timeout: 10000,
       }
     );
+
+    return response.data; // ✅ useful for logs if needed
   } catch (error) {
-    console.error(
-      "❌ Brevo OTP email failed:",
-      error.response?.data || error.message
-    );
+    console.error("❌ Brevo OTP email failed", {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    });
+
     throw new Error("Failed to send OTP email");
   }
 };
