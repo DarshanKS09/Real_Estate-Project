@@ -16,10 +16,13 @@ const app = express();
 // ---------- CORS (CRITICAL FIX) ----------
 app.use(
   cors({
-    origin: "https://real-estate-project-ten-drab.vercel.app/", // frontend URL
-    credentials: true, // allow cookies
+    origin: [
+      "https://real-estate-project-psi-sage.vercel.app", // CURRENT frontend
+    ],
+    credentials: true,
   })
 );
+
 
 // ---------- MIDDLEWARE ----------
 app.use(express.json());
