@@ -1,56 +1,87 @@
-import User from "../models/user.js";
+import User from "../models/User.js";
 import Property from "../models/property.js";
 import Notification from "../models/notification.js";
 
+/**
+ * GET CURRENT USER
+ */
 export const getMe = async (req, res) => {
-  res.json(req.user);
+  try {
+    res.status(200).json(req.user);
+  } catch (error) {
+    console.error("Get me error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
 };
 
+/**
+ * UPDATE PROFILE
+ */
 export const updateProfile = async (req, res) => {
-  const { name, phone, address } = req.body;
+  try {
+    const { name, phone, address } = req.body;
 
-  const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user.id);
+    if (!user || !user.isActive) {
+      return res.status(403).json({ message: "User not allowed" });
+    }
 
-  user.name = name ?? user.name;
-  user.phone = phone ?? user.phone;
-  user.address = address ?? user.address;
+    user.name = name ?? user.name;
+    user.phone = phone ?? user.phone;
+    user.address = address ?? user.address;
 
-  await user.save();
+    await user.save();
 
-  res.json(user);
+    res.status(200).json(user);
+  } catch (error) {
+    console.error("Update profile error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
 };
 
+/**
+ * SAVE / UNSAVE PROPERTY
+ */
 export const toggleSaveProperty = async (req, res) => {
-  const user = await User.findById(req.user.id);
-  const propertyId = req.params.propertyId;
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user || !user.isActive) {
+      return res.status(403).json({ message: "User not allowed" });
+    }
 
-  const property = await Property.findById(propertyId).populate(
-    "createdBy",
-    "name"
-  );
+    const propertyId = req.params.propertyId;
 
-  if (!property) {
-    return res.status(404).json({ message: "Property not found" });
-  }
+    const property = await Property.findById(propertyId).populate(
+      "createdBy",
+      "name email"
+    );
 
-  const alreadySaved = user.savedProperties.includes(propertyId);
+    if (!property || !property.createdBy) {
+      return res.status(404).json({ message: "Property not found" });
+    }
 
-  if (alreadySaved) {
-    user.savedProperties.pull(propertyId);
-  } else {
-    user.savedProperties.push(propertyId);
+    const alreadySaved = user.savedProperties.includes(propertyId);
 
-    await Notification.create({
-      recipient: property.createdBy._id,
-      sender: user._id, // ✅ WHO triggered it
-      message: `${user.name} saved your listing "${property.title}"`,
+    if (alreadySaved) {
+      user.savedProperties.pull(propertyId);
+    } else {
+      user.savedProperties.push(propertyId);
+
+      await Notification.create({
+        recipient: property.createdBy._id,
+        sender: user._id,
+        message: `${user.name} saved your listing "${property.title}"`,
+      });
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      saved: !alreadySaved,
+      savedProperties: user.savedProperties,
     });
+  } catch (error) {
+    console.error("Toggle save property error:", error);
+    res.status(500).json({ message: "Server error" });
   }
-
-  await user.save();
-
-  res.json({
-    saved: !alreadySaved,
-    savedProperties: user.savedProperties,
-  });
 };
