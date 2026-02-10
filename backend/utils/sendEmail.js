@@ -11,7 +11,7 @@ export const sendOtpEmail = async (to, otp) => {
       {
         sender: {
           name: "Real Estate App",
-          email: "no-reply@realestateapp.com", // can be fake, Brevo allows it
+          email: process.env.BREVO_SENDER_EMAIL, // ✅ REAL EMAIL
         },
         to: [
           {
