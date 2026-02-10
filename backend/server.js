@@ -16,7 +16,7 @@ const app = express();
 // ---------- CORS (CRITICAL FIX) ----------
 app.use(
   cors({
-    origin: "http://localhost:5173", // frontend URL
+    origin: "https://real-estate-project-ten-drab.vercel.app/", // frontend URL
     credentials: true, // allow cookies
   })
 );
