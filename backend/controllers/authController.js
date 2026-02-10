@@ -1,6 +1,6 @@
 import User from "../models/User.js";
 import bcrypt from "bcrypt";
-import { hashPassword, comparePassword } from "../utils/Password.js";
+import { hashPassword, comparePassword } from "../utils/password.js";
 import generateToken from "../utils/generateToken.js";
 import { generateOtp } from "../utils/generateOtp.js";
 import { sendOtpEmail } from "../utils/sendEmail.js";
