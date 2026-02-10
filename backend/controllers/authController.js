@@ -1,8 +1,8 @@
 import User from "../models/User.js";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { hashPassword, comparePassword } from "../utils/password.js";
 import generateToken from "../utils/generateToken.js";
-import generateOtp from "../utils/generateOtp.js";
+import { generateOtp } from "../utils/generateOtp.js"; // ✅ FIXED
 import { sendOtpEmail } from "../utils/sendEmail.js";
 
 /**
@@ -16,7 +16,7 @@ export const sendOtp = async (req, res) => {
       return res.status(400).json({ message: "Email required" });
     }
 
-    const otp = generateOtp(); // ✅ FIXED
+    const otp = generateOtp();
     const hashedOtp = await bcrypt.hash(otp, 10);
 
     let user = await User.findOne({ email });
