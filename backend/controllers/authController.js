@@ -1,5 +1,5 @@
 import User from "../models/User.js";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 import { hashPassword, comparePassword } from "../utils/password.js";
 import generateToken from "../utils/generateToken.js";
 import generateOtp from "../utils/generateOtp.js";
