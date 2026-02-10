@@ -1,6 +1,6 @@
 import User from "../models/User.js";
-import Property from "../models/property.js";
-import Notification from "../models/notification.js";
+import Property from "../models/Property.js";
+import Notification from "../models/Notification.js";
 
 /**
  * GET CURRENT USER

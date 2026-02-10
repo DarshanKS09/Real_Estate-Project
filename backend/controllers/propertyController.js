@@ -1,4 +1,4 @@
-import Property from "../models/property.js";
+import Property from "../models/Property.js";
 
 // CREATE property (agent only)
 export const createProperty = async (req, res) => {
