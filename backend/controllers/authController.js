@@ -1,8 +1,8 @@
 import User from "../models/User.js";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { hashPassword, comparePassword } from "../utils/password.js";
 import generateToken from "../utils/generateToken.js";
-import { generateOtp } from "../utils/generateOtp.js";
+import generateOtp from "../utils/generateOtp.js";
 import { sendOtpEmail } from "../utils/sendEmail.js";
 
 /**
@@ -16,7 +16,7 @@ export const sendOtp = async (req, res) => {
       return res.status(400).json({ message: "Email required" });
     }
 
-    const otp = generateOtp();
+    const otp = generateOtp(); // ✅ FIXED
     const hashedOtp = await bcrypt.hash(otp, 10);
 
     let user = await User.findOne({ email });
@@ -24,7 +24,7 @@ export const sendOtp = async (req, res) => {
     if (!user) {
       user = new User({
         email,
-        role: "user",      // ✅ TEMP DEFAULT (required by schema)
+        role: "user", // TEMP default (schema requires it)
         isVerified: false,
         isActive: true,
       });
@@ -71,7 +71,7 @@ export const registerUser = async (req, res) => {
 
     user.name = name;
     user.password = await hashPassword(password);
-    user.role = role === "agent" ? "agent" : "user"; // ✅ FINAL ROLE
+    user.role = role === "agent" ? "agent" : "user";
     user.isVerified = true;
     user.otp = undefined;
     user.otpExpires = undefined;
