@@ -1,6 +1,6 @@
-import User from "../models/User.js";
+import User from "../models/user.js";
 import Property from "../models/property.js";
-import Notification from "../models/Notification.js";
+import Notification from "../models/notification.js";
 
 export const getMe = async (req, res) => {
   res.json(req.user);
