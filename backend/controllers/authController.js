@@ -130,5 +130,6 @@ export const logoutUser = (req, res) => {
     expires: new Date(0),
   });
 
-  res.status(200).json({ message: "Logged out successfully" });
+  res.json({ message: "Logged out successfully" });
 };
+
