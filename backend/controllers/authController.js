@@ -1,4 +1,4 @@
-import User from "../models/User.js";
+import user from "../models/user.js";
 import bcrypt from "bcrypt";
 import { hashPassword, comparePassword } from "../utils/password.js";
 import generateToken from "../utils/generateToken.js";
@@ -21,7 +21,7 @@ export const sendOtp = async (req, res) => {
   let user = await User.findOne({ email });
 
   if (!user) {
-    user = new User({ email });
+    user = new user({ email });
   }
 
   user.otp = hashedOtp;
