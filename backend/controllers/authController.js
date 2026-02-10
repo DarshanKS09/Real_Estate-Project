@@ -22,12 +22,16 @@ export const sendOtp = async (req, res) => {
     let user = await User.findOne({ email });
 
     if (!user) {
-      user = new User({ email });
+      user = new User({
+        email,
+        role: "user",      // ✅ TEMP DEFAULT (required by schema)
+        isVerified: false,
+        isActive: true,
+      });
     }
 
     user.otp = hashedOtp;
-    user.otpExpires = Date.now() + 5 * 60 * 1000;
-    user.isVerified = false;
+    user.otpExpires = Date.now() + 5 * 60 * 1000; // 5 minutes
 
     await user.save();
     await sendOtpEmail(email, otp);
@@ -35,18 +39,18 @@ export const sendOtp = async (req, res) => {
     res.json({ message: "OTP sent to email" });
   } catch (error) {
     console.error("Send OTP error:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Failed to send OTP" });
   }
 };
 
 /**
- * REGISTER → verify OTP + set password
+ * REGISTER → verify OTP + set password (FINAL REGISTRATION)
  */
 export const registerUser = async (req, res) => {
   try {
     const { name, email, password, otp, role } = req.body;
 
-    if (!name || !email || !password || !otp) {
+    if (!name || !email || !password || !otp || !role) {
       return res.status(400).json({ message: "All fields required" });
     }
 
@@ -67,11 +71,10 @@ export const registerUser = async (req, res) => {
 
     user.name = name;
     user.password = await hashPassword(password);
-    user.role = role === "agent" ? "agent" : "user";
+    user.role = role === "agent" ? "agent" : "user"; // ✅ FINAL ROLE
     user.isVerified = true;
     user.otp = undefined;
     user.otpExpires = undefined;
-    user.isActive = true;
 
     await user.save();
 
@@ -80,18 +83,18 @@ export const registerUser = async (req, res) => {
     });
   } catch (error) {
     console.error("Register error:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Registration failed" });
   }
 };
 
 /**
- * LOGIN → email + password only
+ * LOGIN → email + password only (NO OTP HERE)
  */
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email, isVerified: true });
+    const user = await User.findOne({ email });
     if (!user || !user.password) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
@@ -105,9 +108,9 @@ export const loginUser = async (req, res) => {
       return res.status(403).json({ message: "User blocked" });
     }
 
-    generateToken(res, user._id); // MUST set cookie with secure + sameSite=none
+    generateToken(res, user._id);
 
-    res.status(200).json({
+    res.json({
       id: user._id,
       name: user.name,
       email: user.email,
@@ -115,7 +118,7 @@ export const loginUser = async (req, res) => {
     });
   } catch (error) {
     console.error("Login error:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Login failed" });
   }
 };
 
@@ -132,4 +135,3 @@ export const logoutUser = (req, res) => {
 
   res.json({ message: "Logged out successfully" });
 };
-
