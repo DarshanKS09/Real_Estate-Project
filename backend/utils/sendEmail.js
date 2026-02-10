@@ -1,35 +1,44 @@
-import nodemailer from "nodemailer";
+import axios from "axios";
 
 export const sendOtpEmail = async (to, otp) => {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    throw new Error("EMAIL_USER or EMAIL_PASS missing in environment");
+  if (!process.env.BREVO_API_KEY) {
+    throw new Error("BREVO_API_KEY missing in environment variables");
   }
 
-  const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true, // true for 465
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS, // Gmail App Password ONLY
-    },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 10000,
-  });
-
-  // ❗ DO NOT use transporter.verify() on Render
-  // It often hangs or fails even when sendMail works
-
-  await transporter.sendMail({
-    from: `"Real Estate App" <${process.env.EMAIL_USER}>`,
-    to,
-    subject: "Your OTP Code",
-    html: `
-      <h2>Email Verification</h2>
-      <p>Your OTP is:</p>
-      <h1>${otp}</h1>
-      <p>This OTP expires in 5 minutes.</p>
-    `,
-  });
+  try {
+    await axios.post(
+      "https://api.brevo.com/v3/smtp/email",
+      {
+        sender: {
+          name: "Real Estate App",
+          email: "no-reply@realestateapp.com", // can be fake, Brevo allows it
+        },
+        to: [
+          {
+            email: to,
+          },
+        ],
+        subject: "Your OTP Code",
+        htmlContent: `
+          <h2>Email Verification</h2>
+          <p>Your OTP is:</p>
+          <h1>${otp}</h1>
+          <p>This OTP expires in 5 minutes.</p>
+        `,
+      },
+      {
+        headers: {
+          "api-key": process.env.BREVO_API_KEY,
+          "Content-Type": "application/json",
+        },
+        timeout: 10000,
+      }
+    );
+  } catch (error) {
+    console.error(
+      "❌ Brevo OTP email failed:",
+      error.response?.data || error.message
+    );
+    throw new Error("Failed to send OTP email");
+  }
 };
