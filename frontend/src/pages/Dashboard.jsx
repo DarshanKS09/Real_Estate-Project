@@ -14,20 +14,60 @@ export default function Dashboard() {
     address: "",
   });
 
+  // NEW: Filter state
+  const [filters, setFilters] = useState({
+    search: "",
+    location: "",
+    propertyType: "",
+    minPrice: "",
+    maxPrice: "",
+    sort: "",
+  });
+
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  // Fetch user once
   useEffect(() => {
-    Promise.all([api.get("/users/me"), api.get("/properties")])
-      .then(([userRes, propRes]) => {
-        setUser(userRes.data);
-        setProperties(propRes.data);
+    api
+      .get("/users/me")
+      .then((res) => {
+        setUser(res.data);
         setProfileForm({
-          name: userRes.data.name || "",
-          phone: userRes.data.phone || "",
-          address: userRes.data.address || "",
+          name: res.data.name || "",
+          phone: res.data.phone || "",
+          address: res.data.address || "",
         });
-        setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
+
+  // Fetch properties whenever filters or page change
+  useEffect(() => {
+    fetchProperties();
+  }, [filters, page]);
+
+  const fetchProperties = async () => {
+    try {
+      const res = await api.get("/properties", {
+        params: {
+          ...filters,
+          page,
+        },
+      });
+
+      setProperties(res.data.properties);
+      setTotalPages(res.data.totalPages);
+    } catch (err) {
+      console.error("Fetch properties error:", err);
+    }
+  };
+
+  const handleFilterChange = (e) => {
+    setPage(1);
+    setFilters({ ...filters, [e.target.name]: e.target.value });
+  };
 
   const handleLogout = async () => {
     await api.post("/auth/logout");
@@ -37,7 +77,7 @@ export default function Dashboard() {
   const handleSaveProfile = async () => {
     const res = await api.put("/users/me", profileForm);
     setUser(res.data);
-    setShowProfile(false); // ✅ CLOSE profile panel after save
+    setShowProfile(false);
   };
 
   const toggleSave = async (propertyId) => {
@@ -66,7 +106,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Header */}
+      {/* HEADER */}
       <div className="bg-white shadow">
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
           <h1 className="text-xl font-bold text-blue-600">
@@ -74,7 +114,6 @@ export default function Dashboard() {
           </h1>
 
           <div className="flex items-center gap-4">
-            {/* Profile avatar */}
             <div
               onClick={() => setShowProfile(!showProfile)}
               className="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center cursor-pointer"
@@ -92,7 +131,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Profile Section */}
+      {/* PROFILE */}
       {showProfile && (
         <div className="max-w-6xl mx-auto mt-6 bg-white p-6 rounded-xl shadow">
           <h2 className="text-lg font-semibold mb-4">My Profile</h2>
@@ -100,7 +139,6 @@ export default function Dashboard() {
           <div className="space-y-3">
             <input
               type="text"
-              placeholder="Name"
               value={profileForm.name}
               onChange={(e) =>
                 setProfileForm({ ...profileForm, name: e.target.value })
@@ -117,7 +155,6 @@ export default function Dashboard() {
 
             <input
               type="text"
-              placeholder="Phone"
               value={profileForm.phone}
               onChange={(e) =>
                 setProfileForm({ ...profileForm, phone: e.target.value })
@@ -126,7 +163,6 @@ export default function Dashboard() {
             />
 
             <textarea
-              placeholder="Address"
               value={profileForm.address}
               onChange={(e) =>
                 setProfileForm({
@@ -147,8 +183,72 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Listings */}
-      <div className="max-w-6xl mx-auto px-6 py-10">
+      {/* FILTER SECTION */}
+      <div className="max-w-6xl mx-auto px-6 mt-8">
+        <div className="bg-white p-4 rounded-xl shadow grid md:grid-cols-3 gap-4">
+          <input
+            type="text"
+            name="search"
+            placeholder="Search title..."
+            value={filters.search}
+            onChange={handleFilterChange}
+            className="border p-2 rounded"
+          />
+
+          <input
+            type="text"
+            name="location"
+            placeholder="Location"
+            value={filters.location}
+            onChange={handleFilterChange}
+            className="border p-2 rounded"
+          />
+
+          <select
+            name="propertyType"
+            value={filters.propertyType}
+            onChange={handleFilterChange}
+            className="border p-2 rounded"
+          >
+            <option value="">All Types</option>
+            <option value="Apartment">Apartment</option>
+            <option value="House">House</option>
+            <option value="Villa">Villa</option>
+          </select>
+
+          <input
+            type="number"
+            name="minPrice"
+            placeholder="Min Price"
+            value={filters.minPrice}
+            onChange={handleFilterChange}
+            className="border p-2 rounded"
+          />
+
+          <input
+            type="number"
+            name="maxPrice"
+            placeholder="Max Price"
+            value={filters.maxPrice}
+            onChange={handleFilterChange}
+            className="border p-2 rounded"
+          />
+
+          <select
+            name="sort"
+            value={filters.sort}
+            onChange={handleFilterChange}
+            className="border p-2 rounded"
+          >
+            <option value="">Newest</option>
+            <option value="price_asc">Price: Low → High</option>
+            <option value="price_desc">Price: High → Low</option>
+          </select>
+        </div>
+      </div>
+
+      {/* LISTINGS */}
+      <div className="max-w-6xl mx-auto px-6 py-8">
         <h2 className="text-lg font-semibold mb-4">
           Available Listings
         </h2>
@@ -180,7 +280,6 @@ export default function Dashboard() {
                   <div className="mt-4 border-t pt-3 text-sm">
                     <p className="mb-3">{p.description}</p>
 
-                    {/* ✅ Agent contact details */}
                     <div className="mb-3 text-gray-700">
                       <p>
                         <strong>Agent:</strong>{" "}
@@ -198,7 +297,6 @@ export default function Dashboard() {
                       )}
                     </div>
 
-                    {/* Actions */}
                     <div className="flex gap-3">
                       <button
                         onClick={(e) => {
@@ -214,9 +312,7 @@ export default function Dashboard() {
                         {isSaved ? "Saved" : "Save"}
                       </button>
 
-                      <button
-                        className="px-3 py-1 rounded bg-gray-800 text-white text-sm"
-                      >
+                      <button className="px-3 py-1 rounded bg-gray-800 text-white text-sm">
                         Contact Agent
                       </button>
                     </div>
@@ -225,6 +321,29 @@ export default function Dashboard() {
               </div>
             );
           })}
+        </div>
+
+        {/* PAGINATION */}
+        <div className="flex justify-center mt-8 gap-4">
+          <button
+            disabled={page === 1}
+            onClick={() => setPage(page - 1)}
+            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+          >
+            Prev
+          </button>
+
+          <span className="font-medium">
+            Page {page} of {totalPages}
+          </span>
+
+          <button
+            disabled={page === totalPages}
+            onClick={() => setPage(page + 1)}
+            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+          >
+            Next
+          </button>
         </div>
       </div>
     </div>

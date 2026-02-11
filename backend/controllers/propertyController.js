@@ -9,7 +9,7 @@ export const createProperty = async (req, res) => {
     });
 
     res.status(201).json(property);
-  } catch {
+  } catch (error) {
     res.status(400).json({ message: "Failed to create property" });
   }
 };
@@ -22,7 +22,7 @@ export const getMyProperties = async (req, res) => {
     }).sort({ createdAt: -1 });
 
     res.json(properties);
-  } catch {
+  } catch (error) {
     res.status(500).json({ message: "Failed to fetch properties" });
   }
 };
@@ -41,7 +41,7 @@ export const updateProperty = async (req, res) => {
     }
 
     res.json(property);
-  } catch {
+  } catch (error) {
     res.status(400).json({ message: "Failed to update property" });
   }
 };
@@ -59,20 +59,80 @@ export const deleteProperty = async (req, res) => {
     }
 
     res.json({ message: "Property deleted" });
-  } catch {
+  } catch (error) {
     res.status(500).json({ message: "Failed to delete property" });
   }
 };
 
-// GET all properties (public, for users)
+// GET all properties (public with filtering + pagination)
 export const getAllProperties = async (req, res) => {
   try {
-    const properties = await Property.find()
-      .populate("createdBy", "name email phone") // ✅ FIX HERE
-      .sort({ createdAt: -1 });
+    const {
+      search,
+      location,
+      propertyType,
+      minPrice,
+      maxPrice,
+      sort,
+      page = 1,
+      limit = 6,
+    } = req.query;
 
-    res.json(properties);
-  } catch {
+    const query = {};
+
+    // Title search (case-insensitive)
+    if (search) {
+      query.title = { $regex: search, $options: "i" };
+    }
+
+    // Location filter
+    if (location) {
+      query.location = { $regex: location, $options: "i" };
+    }
+
+    // Property type filter
+    if (propertyType) {
+      query.propertyType = propertyType;
+    }
+
+    // Price range filter
+    if (minPrice || maxPrice) {
+      query.price = {};
+      if (minPrice) query.price.$gte = Number(minPrice);
+      if (maxPrice) query.price.$lte = Number(maxPrice);
+    }
+
+    // Sorting logic
+    let sortOption = { createdAt: -1 }; // default newest
+
+    if (sort === "price_asc") {
+      sortOption = { price: 1 };
+    }
+
+    if (sort === "price_desc") {
+      sortOption = { price: -1 };
+    }
+
+    const currentPage = Number(page);
+    const perPage = Number(limit);
+    const skip = (currentPage - 1) * perPage;
+
+    const properties = await Property.find(query)
+      .populate("createdBy", "name email phone")
+      .sort(sortOption)
+      .skip(skip)
+      .limit(perPage);
+
+    const total = await Property.countDocuments(query);
+
+    res.json({
+      properties,
+      total,
+      currentPage,
+      totalPages: Math.ceil(total / perPage),
+    });
+  } catch (error) {
+    console.error("Get properties error:", error);
     res.status(500).json({ message: "Failed to fetch properties" });
   }
 };
@@ -81,14 +141,14 @@ export const getAllProperties = async (req, res) => {
 export const getPropertyById = async (req, res) => {
   try {
     const property = await Property.findById(req.params.id)
-      .populate("createdBy", "name email phone"); // ✅ FIX HERE
+      .populate("createdBy", "name email phone");
 
     if (!property) {
       return res.status(404).json({ message: "Property not found" });
     }
 
     res.json(property);
-  } catch {
+  } catch (error) {
     res.status(500).json({ message: "Failed to fetch property" });
   }
 };
