@@ -65,12 +65,6 @@ export default function Dashboard() {
     setShowProfile(false);
   };
 
-  const highlightMatch = (text) => {
-    if (!location) return text;
-    const regex = new RegExp(`(${location})`, "gi");
-    return text.replace(regex, "<mark>$1</mark>");
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -113,58 +107,6 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-
-      {/* PROFILE */}
-      {showProfile && (
-        <div className="max-w-6xl mx-auto mt-6 bg-white p-6 rounded-xl shadow">
-          <h2 className="text-lg font-semibold mb-4">My Profile</h2>
-
-          <div className="space-y-3">
-            <input
-              type="text"
-              value={profileForm.name}
-              onChange={(e) =>
-                setProfileForm({ ...profileForm, name: e.target.value })
-              }
-              className="w-full border p-2 rounded"
-            />
-
-            <input
-              type="email"
-              value={user.email}
-              disabled
-              className="w-full border p-2 rounded bg-gray-100"
-            />
-
-            <input
-              type="text"
-              value={profileForm.phone}
-              onChange={(e) =>
-                setProfileForm({ ...profileForm, phone: e.target.value })
-              }
-              className="w-full border p-2 rounded"
-            />
-
-            <textarea
-              value={profileForm.address}
-              onChange={(e) =>
-                setProfileForm({
-                  ...profileForm,
-                  address: e.target.value,
-                })
-              }
-              className="w-full border p-2 rounded"
-            />
-
-            <button
-              onClick={handleSaveProfile}
-              className="bg-blue-600 text-white px-4 py-2 rounded"
-            >
-              Save Profile
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* FILTER BAR */}
       <div className="max-w-6xl mx-auto px-6 mt-8">
@@ -215,41 +157,23 @@ export default function Dashboard() {
             <div
               key={p._id}
               onClick={() => navigate(`/property/${p._id}`)}
-              className="bg-white rounded-xl shadow cursor-pointer hover:shadow-lg transition"
+              className="bg-white p-5 rounded-xl shadow cursor-pointer hover:shadow-lg transition"
             >
-              {/* IMAGE */}
-              {p.images && p.images.length > 0 ? (
-                <img
-                  src={p.images[0]}
-                  alt="Property"
-                  className="w-full h-48 object-cover rounded-t-xl"
-                />
-              ) : (
-                <div className="w-full h-48 bg-gray-200 flex items-center justify-center rounded-t-xl">
-                  No Image
-                </div>
-              )}
+              <h3 className="font-semibold text-blue-600">
+                {p.title}
+              </h3>
 
-              <div className="p-4">
-                <h3 className="font-semibold text-blue-600">
-                  {p.title}
-                </h3>
+              <p className="text-sm text-gray-600">
+                {p.location}
+              </p>
 
-                <p
-                  className="text-sm text-gray-600"
-                  dangerouslySetInnerHTML={{
-                    __html: highlightMatch(p.location),
-                  }}
-                />
+              <p className="text-sm font-medium mt-1">
+                ₹{p.price}
+              </p>
 
-                <p className="text-sm font-medium mt-1">
-                  ₹{p.price}
-                </p>
-
-                <p className="text-xs text-gray-500 mt-1">
-                  Type: {p.propertyType}
-                </p>
-              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Type: {p.propertyType}
+              </p>
             </div>
           ))}
         </div>
