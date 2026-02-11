@@ -201,9 +201,9 @@ export default function Dashboard() {
             className="border p-2 rounded w-full md:w-1/4"
           >
             <option value="">All Types</option>
-            <option value="Land">Land</option>
-            <option value="House">House</option>
-            <option value="Apartment">Apartment</option>
+            <option value="land">Land</option>
+            <option value="house">House</option>
+            <option value="apartment">Apartment</option>
           </select>
         </div>
       </div>
