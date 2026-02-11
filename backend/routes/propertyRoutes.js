@@ -16,21 +16,14 @@ const router = express.Router();
 
 // ---------- PUBLIC ROUTES ----------
 router.get("/", getAllProperties);
+router.get("/:id", getPropertyById);  // 🔥 MUST BE HERE (PUBLIC)
 
 // ---------- PROTECTED AGENT ROUTES ----------
 router.use(protect, authorizeRoles("agent"));
 
 router.get("/my", getMyProperties);
-
-// Create property with images (max 5)
 router.post("/", upload.array("images", 5), createProperty);
-
-// Update property with images (max 5)
 router.put("/:id", upload.array("images", 5), updateProperty);
-
 router.delete("/:id", deleteProperty);
-
-// ---------- PUBLIC SINGLE PROPERTY (KEEP LAST) ----------
-router.get("/:id", getPropertyById);
 
 export default router;
