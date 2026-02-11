@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+
   const [user, setUser] = useState(null);
   const [properties, setProperties] = useState([]);
-  const [expandedId, setExpandedId] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -18,7 +20,6 @@ export default function Dashboard() {
     address: "",
   });
 
-  // Fetch user
   useEffect(() => {
     api
       .get("/users/me")
@@ -33,7 +34,6 @@ export default function Dashboard() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Fetch properties whenever filters change
   useEffect(() => {
     fetchProperties();
   }, [location, sort, propertyType]);
@@ -63,14 +63,6 @@ export default function Dashboard() {
     const res = await api.put("/users/me", profileForm);
     setUser(res.data);
     setShowProfile(false);
-  };
-
-  const toggleSave = async (propertyId) => {
-    const res = await api.post(`/users/save/${propertyId}`);
-    setUser({
-      ...user,
-      savedProperties: res.data.savedProperties,
-    });
   };
 
   const highlightMatch = (text) => {
@@ -219,18 +211,26 @@ export default function Dashboard() {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {properties.map((p) => {
-            const isExpanded = expandedId === p._id;
-            const isSaved = user.savedProperties?.includes(p._id);
+          {properties.map((p) => (
+            <div
+              key={p._id}
+              onClick={() => navigate(`/property/${p._id}`)}
+              className="bg-white rounded-xl shadow cursor-pointer hover:shadow-lg transition"
+            >
+              {/* IMAGE */}
+              {p.images && p.images.length > 0 ? (
+                <img
+                  src={p.images[0]}
+                  alt="Property"
+                  className="w-full h-48 object-cover rounded-t-xl"
+                />
+              ) : (
+                <div className="w-full h-48 bg-gray-200 flex items-center justify-center rounded-t-xl">
+                  No Image
+                </div>
+              )}
 
-            return (
-              <div
-                key={p._id}
-                className="bg-white p-5 rounded-xl shadow cursor-pointer"
-                onClick={() =>
-                  setExpandedId(isExpanded ? null : p._id)
-                }
-              >
+              <div className="p-4">
                 <h3 className="font-semibold text-blue-600">
                   {p.title}
                 </h3>
@@ -249,48 +249,9 @@ export default function Dashboard() {
                 <p className="text-xs text-gray-500 mt-1">
                   Type: {p.propertyType}
                 </p>
-
-                {isExpanded && (
-                  <div className="mt-4 border-t pt-3 text-sm">
-                    <p className="mb-3">{p.description}</p>
-
-                    <div className="mb-3 text-gray-700">
-                      <p>
-                        <strong>Agent:</strong>{" "}
-                        {p.createdBy?.name}
-                      </p>
-                      <p>
-                        <strong>Email:</strong>{" "}
-                        {p.createdBy?.email}
-                      </p>
-                      {p.createdBy?.phone && (
-                        <p>
-                          <strong>Phone:</strong>{" "}
-                          {p.createdBy.phone}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="flex gap-3">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleSave(p._id);
-                        }}
-                        className={`px-3 py-1 rounded text-white text-sm ${
-                          isSaved
-                            ? "bg-green-600"
-                            : "bg-blue-600"
-                        }`}
-                      >
-                        {isSaved ? "Saved" : "Save"}
-                      </button>
-                    </div>
-                  </div>
-                )}
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       </div>
     </div>
