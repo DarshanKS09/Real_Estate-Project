@@ -10,6 +10,8 @@ export default function PropertyDetails() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [showContact, setShowContact] = useState(false);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -21,7 +23,7 @@ export default function PropertyDetails() {
 
         setProperty(propertyRes.data);
         setUser(userRes.data);
-      } catch (err) {
+      } catch {
         console.error("Failed to load property");
       } finally {
         setLoading(false);
@@ -32,14 +34,27 @@ export default function PropertyDetails() {
   }, [id]);
 
   const toggleSave = async () => {
+    const res = await api.post(`/users/save/${id}`);
+    setUser({
+      ...user,
+      savedProperties: res.data.savedProperties,
+    });
+  };
+
+  const sendInquiry = async () => {
+    if (!message.trim()) return alert("Enter a message");
+
     try {
-      const res = await api.post(`/users/save/${id}`);
-      setUser({
-        ...user,
-        savedProperties: res.data.savedProperties,
+      await api.post("/notifications/inquiry", {
+        propertyId: id,
+        message,
       });
+
+      alert("Inquiry sent to agent");
+      setShowContact(false);
+      setMessage("");
     } catch {
-      console.error("Save failed");
+      alert("Failed to send inquiry");
     }
   };
 
@@ -72,7 +87,6 @@ export default function PropertyDetails() {
         </button>
 
         <div className="bg-white rounded-xl shadow p-6">
-          {/* TITLE */}
           <h1 className="text-2xl font-bold mb-2">
             {property.title}
           </h1>
@@ -83,26 +97,23 @@ export default function PropertyDetails() {
             ₹{property.price}
           </p>
 
-          {/* IMAGE SECTION */}
-          {property.images && property.images.length > 0 && (
+          {/* IMAGES */}
+          {property.images?.length > 0 && (
             <div className="mb-6">
               <img
                 src={property.images[selectedImage]}
-                alt="Property"
                 className="w-full h-96 object-cover rounded-lg"
+                alt="Property"
               />
 
-              <div className="flex gap-3 mt-4 overflow-x-auto">
-                {property.images.map((img, index) => (
+              <div className="flex gap-3 mt-4">
+                {property.images.map((img, i) => (
                   <img
-                    key={index}
+                    key={i}
                     src={img}
-                    alt="Thumbnail"
-                    onClick={() =>
-                      setSelectedImage(index)
-                    }
+                    onClick={() => setSelectedImage(i)}
                     className={`w-24 h-24 object-cover rounded cursor-pointer border ${
-                      selectedImage === index
+                      selectedImage === i
                         ? "border-blue-600"
                         : "border-gray-300"
                     }`}
@@ -112,17 +123,13 @@ export default function PropertyDetails() {
             </div>
           )}
 
-          {/* DESCRIPTION */}
           <div className="mb-6">
             <h2 className="font-semibold text-lg mb-2">
               Description
             </h2>
-            <p className="text-gray-700">
-              {property.description}
-            </p>
+            <p>{property.description}</p>
           </div>
 
-          {/* AGENT INFO */}
           <div className="mb-6 border-t pt-4">
             <h2 className="font-semibold text-lg mb-2">
               Agent Information
@@ -135,12 +142,10 @@ export default function PropertyDetails() {
               <strong>Email:</strong>{" "}
               {property.createdBy?.email}
             </p>
-            {property.createdBy?.phone && (
-              <p>
-                <strong>Phone:</strong>{" "}
-                {property.createdBy.phone}
-              </p>
-            )}
+            <p>
+              <strong>Phone:</strong>{" "}
+              {property.createdBy?.phone}
+            </p>
           </div>
 
           {/* ACTIONS */}
@@ -156,12 +161,76 @@ export default function PropertyDetails() {
               {isSaved ? "Saved" : "Save Property"}
             </button>
 
-            <button className="px-4 py-2 bg-gray-800 text-white rounded">
+            <button
+              onClick={() => setShowContact(true)}
+              className="px-4 py-2 bg-gray-800 text-white rounded"
+            >
               Contact Agent
             </button>
           </div>
         </div>
       </div>
+
+      {/* CONTACT MODAL */}
+      {showContact && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-xl w-96">
+            <h2 className="text-lg font-semibold mb-4">
+              Contact Agent
+            </h2>
+
+            <div className="space-y-2 mb-4 text-sm">
+              <a
+                href={`mailto:${property.createdBy?.email}`}
+                className="text-blue-600 block"
+              >
+                📧 Email Agent
+              </a>
+
+              <a
+                href={`tel:${property.createdBy?.phone}`}
+                className="text-blue-600 block"
+              >
+                📞 Call Agent
+              </a>
+
+              <a
+                href={`https://wa.me/${property.createdBy?.phone}`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-green-600 block"
+              >
+                💬 WhatsApp Agent
+              </a>
+            </div>
+
+            <textarea
+              placeholder="Write your inquiry..."
+              value={message}
+              onChange={(e) =>
+                setMessage(e.target.value)
+              }
+              className="w-full border p-2 rounded mb-3"
+            />
+
+            <div className="flex justify-between">
+              <button
+                onClick={() => setShowContact(false)}
+                className="text-gray-500"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={sendInquiry}
+                className="bg-blue-600 text-white px-4 py-2 rounded"
+              >
+                Send Inquiry
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
