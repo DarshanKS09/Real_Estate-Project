@@ -10,6 +10,7 @@ export default function Dashboard() {
 
   const [location, setLocation] = useState("");
   const [sort, setSort] = useState("");
+  const [propertyType, setPropertyType] = useState("");
 
   const [profileForm, setProfileForm] = useState({
     name: "",
@@ -32,10 +33,10 @@ export default function Dashboard() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Fetch properties whenever location or sort changes
+  // Fetch properties whenever filters change
   useEffect(() => {
     fetchProperties();
-  }, [location, sort]);
+  }, [location, sort, propertyType]);
 
   const fetchProperties = async () => {
     try {
@@ -43,6 +44,7 @@ export default function Dashboard() {
         params: {
           location,
           sort,
+          propertyType,
         },
       });
 
@@ -71,10 +73,8 @@ export default function Dashboard() {
     });
   };
 
-  // Highlight matching location text
   const highlightMatch = (text) => {
     if (!location) return text;
-
     const regex = new RegExp(`(${location})`, "gi");
     return text.replace(regex, "<mark>$1</mark>");
   };
@@ -174,7 +174,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* SIMPLE FILTER BAR */}
+      {/* FILTER BAR */}
       <div className="max-w-6xl mx-auto px-6 mt-8">
         <div className="bg-white p-4 rounded-xl shadow flex flex-col md:flex-row gap-4">
           <input
@@ -182,17 +182,28 @@ export default function Dashboard() {
             placeholder="Enter Location..."
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            className="border p-2 rounded w-full md:w-1/2"
+            className="border p-2 rounded w-full md:w-1/3"
           />
 
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value)}
-            className="border p-2 rounded w-full md:w-1/3"
+            className="border p-2 rounded w-full md:w-1/4"
           >
-            <option value="">Sort By</option>
-            <option value="price_asc">Price: Low → High</option>
-            <option value="price_desc">Price: High → Low</option>
+            <option value="">Sort By Price</option>
+            <option value="price_asc">Low → High</option>
+            <option value="price_desc">High → Low</option>
+          </select>
+
+          <select
+            value={propertyType}
+            onChange={(e) => setPropertyType(e.target.value)}
+            className="border p-2 rounded w-full md:w-1/4"
+          >
+            <option value="">All Types</option>
+            <option value="Land">Land</option>
+            <option value="House">House</option>
+            <option value="Apartment">Apartment</option>
           </select>
         </div>
       </div>
@@ -233,6 +244,10 @@ export default function Dashboard() {
 
                 <p className="text-sm font-medium mt-1">
                   ₹{p.price}
+                </p>
+
+                <p className="text-xs text-gray-500 mt-1">
+                  Type: {p.propertyType}
                 </p>
 
                 {isExpanded && (
