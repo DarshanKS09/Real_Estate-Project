@@ -8,26 +8,16 @@ export default function Dashboard() {
   const [showProfile, setShowProfile] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const [location, setLocation] = useState("");
+  const [sort, setSort] = useState("");
+
   const [profileForm, setProfileForm] = useState({
     name: "",
     phone: "",
     address: "",
   });
 
-  // NEW: Filter state
-  const [filters, setFilters] = useState({
-    search: "",
-    location: "",
-    propertyType: "",
-    minPrice: "",
-    maxPrice: "",
-    sort: "",
-  });
-
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-
-  // Fetch user once
+  // Fetch user
   useEffect(() => {
     api
       .get("/users/me")
@@ -39,34 +29,27 @@ export default function Dashboard() {
           address: res.data.address || "",
         });
       })
-      .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
-  // Fetch properties whenever filters or page change
+  // Fetch properties whenever location or sort changes
   useEffect(() => {
     fetchProperties();
-  }, [filters, page]);
+  }, [location, sort]);
 
   const fetchProperties = async () => {
     try {
       const res = await api.get("/properties", {
         params: {
-          ...filters,
-          page,
+          location,
+          sort,
         },
       });
 
       setProperties(res.data.properties);
-      setTotalPages(res.data.totalPages);
     } catch (err) {
       console.error("Fetch properties error:", err);
     }
-  };
-
-  const handleFilterChange = (e) => {
-    setPage(1);
-    setFilters({ ...filters, [e.target.name]: e.target.value });
   };
 
   const handleLogout = async () => {
@@ -86,6 +69,14 @@ export default function Dashboard() {
       ...user,
       savedProperties: res.data.savedProperties,
     });
+  };
+
+  // Highlight matching location text
+  const highlightMatch = (text) => {
+    if (!location) return text;
+
+    const regex = new RegExp(`(${location})`, "gi");
+    return text.replace(regex, "<mark>$1</mark>");
   };
 
   if (loading) {
@@ -183,64 +174,23 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* FILTER SECTION */}
+      {/* SIMPLE FILTER BAR */}
       <div className="max-w-6xl mx-auto px-6 mt-8">
-        <div className="bg-white p-4 rounded-xl shadow grid md:grid-cols-3 gap-4">
+        <div className="bg-white p-4 rounded-xl shadow flex flex-col md:flex-row gap-4">
           <input
             type="text"
-            name="search"
-            placeholder="Search title..."
-            value={filters.search}
-            onChange={handleFilterChange}
-            className="border p-2 rounded"
-          />
-
-          <input
-            type="text"
-            name="location"
-            placeholder="Location"
-            value={filters.location}
-            onChange={handleFilterChange}
-            className="border p-2 rounded"
+            placeholder="Enter Location..."
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            className="border p-2 rounded w-full md:w-1/2"
           />
 
           <select
-            name="propertyType"
-            value={filters.propertyType}
-            onChange={handleFilterChange}
-            className="border p-2 rounded"
+            value={sort}
+            onChange={(e) => setSort(e.target.value)}
+            className="border p-2 rounded w-full md:w-1/3"
           >
-            <option value="">All Types</option>
-            <option value="Apartment">Apartment</option>
-            <option value="House">House</option>
-            <option value="Villa">Villa</option>
-          </select>
-
-          <input
-            type="number"
-            name="minPrice"
-            placeholder="Min Price"
-            value={filters.minPrice}
-            onChange={handleFilterChange}
-            className="border p-2 rounded"
-          />
-
-          <input
-            type="number"
-            name="maxPrice"
-            placeholder="Max Price"
-            value={filters.maxPrice}
-            onChange={handleFilterChange}
-            className="border p-2 rounded"
-          />
-
-          <select
-            name="sort"
-            value={filters.sort}
-            onChange={handleFilterChange}
-            className="border p-2 rounded"
-          >
-            <option value="">Newest</option>
+            <option value="">Sort By</option>
             <option value="price_asc">Price: Low → High</option>
             <option value="price_desc">Price: High → Low</option>
           </select>
@@ -248,10 +198,14 @@ export default function Dashboard() {
       </div>
 
       {/* LISTINGS */}
-      <div className="max-w-6xl mx-auto px-6 py-8">
+      <div className="max-w-6xl mx-auto px-6 py-10">
         <h2 className="text-lg font-semibold mb-4">
           Available Listings
         </h2>
+
+        {properties.length === 0 && (
+          <p className="text-gray-500">No listings found.</p>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {properties.map((p) => {
@@ -269,9 +223,14 @@ export default function Dashboard() {
                 <h3 className="font-semibold text-blue-600">
                   {p.title}
                 </h3>
-                <p className="text-sm text-gray-600">
-                  {p.location}
-                </p>
+
+                <p
+                  className="text-sm text-gray-600"
+                  dangerouslySetInnerHTML={{
+                    __html: highlightMatch(p.location),
+                  }}
+                />
+
                 <p className="text-sm font-medium mt-1">
                   ₹{p.price}
                 </p>
@@ -311,39 +270,12 @@ export default function Dashboard() {
                       >
                         {isSaved ? "Saved" : "Save"}
                       </button>
-
-                      <button className="px-3 py-1 rounded bg-gray-800 text-white text-sm">
-                        Contact Agent
-                      </button>
                     </div>
                   </div>
                 )}
               </div>
             );
           })}
-        </div>
-
-        {/* PAGINATION */}
-        <div className="flex justify-center mt-8 gap-4">
-          <button
-            disabled={page === 1}
-            onClick={() => setPage(page - 1)}
-            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-          >
-            Prev
-          </button>
-
-          <span className="font-medium">
-            Page {page} of {totalPages}
-          </span>
-
-          <button
-            disabled={page === totalPages}
-            onClick={() => setPage(page + 1)}
-            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-          >
-            Next
-          </button>
         </div>
       </div>
     </div>
