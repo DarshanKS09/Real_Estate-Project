@@ -24,6 +24,11 @@ const propertySchema = new mongoose.Schema(
       enum: ["house", "apartment", "land"],
       required: true,
     },
+    images: [
+      {
+        type: String, // Cloudinary image URL
+      },
+    ],
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

@@ -3,13 +3,17 @@ import Property from "../models/Property.js";
 // CREATE property (agent only)
 export const createProperty = async (req, res) => {
   try {
+    const imageUrls = req.files?.map((file) => file.path) || [];
+
     const property = await Property.create({
       ...req.body,
+      images: imageUrls,
       createdBy: req.user.id,
     });
 
     res.status(201).json(property);
   } catch (error) {
+    console.error(error);
     res.status(400).json({ message: "Failed to create property" });
   }
 };
@@ -30,9 +34,18 @@ export const getMyProperties = async (req, res) => {
 // UPDATE property (only owner)
 export const updateProperty = async (req, res) => {
   try {
+    const imageUrls = req.files?.map((file) => file.path);
+
+    const updateData = { ...req.body };
+
+    // If new images uploaded, replace images array
+    if (imageUrls && imageUrls.length > 0) {
+      updateData.images = imageUrls;
+    }
+
     const property = await Property.findOneAndUpdate(
       { _id: req.params.id, createdBy: req.user.id },
-      req.body,
+      updateData,
       { new: true }
     );
 
@@ -42,6 +55,7 @@ export const updateProperty = async (req, res) => {
 
     res.json(property);
   } catch (error) {
+    console.error(error);
     res.status(400).json({ message: "Failed to update property" });
   }
 };
@@ -80,30 +94,25 @@ export const getAllProperties = async (req, res) => {
 
     const query = {};
 
-    // Title search (case-insensitive)
     if (search) {
       query.title = { $regex: search, $options: "i" };
     }
 
-    // Location filter
     if (location) {
       query.location = { $regex: location, $options: "i" };
     }
 
-    // Property type filter
     if (propertyType) {
       query.propertyType = propertyType;
     }
 
-    // Price range filter
     if (minPrice || maxPrice) {
       query.price = {};
       if (minPrice) query.price.$gte = Number(minPrice);
       if (maxPrice) query.price.$lte = Number(maxPrice);
     }
 
-    // Sorting logic
-    let sortOption = { createdAt: -1 }; // default newest
+    let sortOption = { createdAt: -1 };
 
     if (sort === "price_asc") {
       sortOption = { price: 1 };

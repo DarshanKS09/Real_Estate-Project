@@ -5,19 +5,18 @@ import api from "../api/axios";
 export default function AgentDashboard() {
   const navigate = useNavigate();
 
-  // ---------- CORE STATE ----------
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ---------- NOTIFICATIONS ----------
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [selectedNotification, setSelectedNotification] = useState(null);
+  const [selectedNotification, setSelectedNotification] =
+    useState(null);
 
-  // ---------- LISTINGS ----------
   const [myProperties, setMyProperties] = useState([]);
   const [showForm, setShowForm] = useState(false);
-  const [editingProperty, setEditingProperty] = useState(null);
+  const [editingProperty, setEditingProperty] =
+    useState(null);
   const [message, setMessage] = useState("");
 
   const [formData, setFormData] = useState({
@@ -28,7 +27,8 @@ export default function AgentDashboard() {
     propertyType: "house",
   });
 
-  // ---------- FETCHERS ----------
+  const [images, setImages] = useState([]);
+
   const fetchNotifications = async () => {
     const res = await api.get("/notifications/my");
     setNotifications(res.data);
@@ -56,13 +56,11 @@ export default function AgentDashboard() {
     (n) => !n.isRead
   ).length;
 
-  // ---------- AUTH ----------
   const handleLogout = async () => {
     await api.post("/auth/logout");
     navigate("/");
   };
 
-  // ---------- NOTIFICATION HANDLERS ----------
   const openNotificationDetails = (n) => {
     setSelectedNotification(n);
     setShowNotifications(false);
@@ -81,7 +79,6 @@ export default function AgentDashboard() {
     setSelectedNotification(null);
   };
 
-  // ---------- PROPERTY FORM ----------
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -94,16 +91,36 @@ export default function AgentDashboard() {
     setMessage("");
 
     try {
+      const submitData = new FormData();
+      submitData.append("title", formData.title);
+      submitData.append("description", formData.description);
+      submitData.append("price", Number(formData.price));
+      submitData.append("location", formData.location);
+      submitData.append(
+        "propertyType",
+        formData.propertyType
+      );
+
+      for (let i = 0; i < images.length; i++) {
+        submitData.append("images", images[i]);
+      }
+
       if (editingProperty) {
-        await api.put(`/properties/${editingProperty._id}`, {
-          ...formData,
-          price: Number(formData.price),
-        });
+        await api.put(
+          `/properties/${editingProperty._id}`,
+          submitData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
         setMessage("Property updated");
       } else {
-        await api.post("/properties", {
-          ...formData,
-          price: Number(formData.price),
+        await api.post("/properties", submitData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         });
         setMessage("Property created");
       }
@@ -111,6 +128,7 @@ export default function AgentDashboard() {
       fetchMyProperties();
       setShowForm(false);
       setEditingProperty(null);
+      setImages([]);
       setFormData({
         title: "",
         description: "",
@@ -137,7 +155,6 @@ export default function AgentDashboard() {
     );
   }
 
-  // ---------- UI ----------
   return (
     <div className="min-h-screen bg-gray-100">
       {/* HEADER */}
@@ -148,7 +165,6 @@ export default function AgentDashboard() {
           </h1>
 
           <div className="flex items-center gap-4 relative">
-            {/* 🔔 Notifications */}
             <div
               onClick={() =>
                 setShowNotifications(!showNotifications)
@@ -163,43 +179,6 @@ export default function AgentDashboard() {
               )}
             </div>
 
-            {showNotifications && (
-              <div className="absolute top-10 right-0 bg-white shadow rounded w-96 p-3 z-20">
-                <h3 className="text-sm font-semibold mb-2">
-                  Notifications
-                </h3>
-
-                {notifications.length === 0 ? (
-                  <p className="text-sm text-gray-500">
-                    No notifications
-                  </p>
-                ) : (
-                  <ul className="space-y-2 text-sm">
-                    {notifications.map((n) => (
-                      <li
-                        key={n._id}
-                        className={`flex justify-between items-center border-b pb-1 ${
-                          n.isRead
-                            ? "text-gray-400"
-                            : "text-black"
-                        }`}
-                      >
-                        <span>{n.message}</span>
-                        <button
-                          onClick={() =>
-                            openNotificationDetails(n)
-                          }
-                          className="text-blue-600 text-xs"
-                        >
-                          Details
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            )}
-
             <button
               onClick={handleLogout}
               className="bg-red-500 text-white px-3 py-1 rounded"
@@ -210,32 +189,6 @@ export default function AgentDashboard() {
         </div>
       </div>
 
-      {/* NOTIFICATION DETAILS */}
-      {selectedNotification && (
-        <div className="max-w-md mx-auto mt-8 bg-white p-6 rounded-xl shadow">
-          <h2 className="font-semibold mb-3">
-            Saved By User
-          </h2>
-
-          <p>
-            <strong>Name:</strong>{" "}
-            {selectedNotification.sender?.name}
-          </p>
-          <p>
-            <strong>Email:</strong>{" "}
-            {selectedNotification.sender?.email}
-          </p>
-
-          <button
-            onClick={closeNotificationDetails}
-            className="mt-4 bg-blue-600 text-white px-4 py-2 rounded"
-          >
-            Close
-          </button>
-        </div>
-      )}
-
-      {/* MAIN */}
       <div className="max-w-6xl mx-auto px-6 py-10">
         {!showForm ? (
           <>
@@ -268,7 +221,8 @@ export default function AgentDashboard() {
                               description: p.description,
                               price: p.price,
                               location: p.location,
-                              propertyType: p.propertyType,
+                              propertyType:
+                                p.propertyType,
                             });
                             setShowForm(true);
                           }}
@@ -318,7 +272,10 @@ export default function AgentDashboard() {
               </p>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-4"
+            >
               <input
                 name="title"
                 value={formData.title}
@@ -363,9 +320,22 @@ export default function AgentDashboard() {
                 className="w-full border p-2 rounded"
               >
                 <option value="house">House</option>
-                <option value="apartment">Apartment</option>
+                <option value="apartment">
+                  Apartment
+                </option>
                 <option value="land">Land</option>
               </select>
+
+              {/* IMAGE UPLOAD */}
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={(e) =>
+                  setImages(e.target.files)
+                }
+                className="w-full"
+              />
 
               <button
                 type="submit"
