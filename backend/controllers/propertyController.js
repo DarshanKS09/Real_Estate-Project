@@ -1,6 +1,8 @@
 import Property from "../models/Property.js";
 
-// CREATE property (agent only)
+/* =========================================
+   CREATE PROPERTY (Agent Only)
+========================================= */
 export const createProperty = async (req, res) => {
   try {
     const imageUrls = req.files?.map((file) => file.path) || [];
@@ -8,43 +10,46 @@ export const createProperty = async (req, res) => {
     const property = await Property.create({
       ...req.body,
       images: imageUrls,
-      createdBy: req.user.id,
+      createdBy: req.user._id, // ✅ FIXED
     });
 
     res.status(201).json(property);
   } catch (error) {
-    console.error(error);
+    console.error("Create property error:", error);
     res.status(400).json({ message: "Failed to create property" });
   }
 };
 
-// GET agent's properties
+/* =========================================
+   GET AGENT'S PROPERTIES
+========================================= */
 export const getMyProperties = async (req, res) => {
   try {
     const properties = await Property.find({
-      createdBy: req.user.id,
+      createdBy: req.user._id, // ✅ FIXED
     }).sort({ createdAt: -1 });
 
     res.json(properties);
   } catch (error) {
+    console.error("Get my properties error:", error);
     res.status(500).json({ message: "Failed to fetch properties" });
   }
 };
 
-// UPDATE property (only owner)
+/* =========================================
+   UPDATE PROPERTY (Owner Only)
+========================================= */
 export const updateProperty = async (req, res) => {
   try {
     const imageUrls = req.files?.map((file) => file.path);
-
     const updateData = { ...req.body };
 
-    // If new images uploaded, replace images array
     if (imageUrls && imageUrls.length > 0) {
       updateData.images = imageUrls;
     }
 
     const property = await Property.findOneAndUpdate(
-      { _id: req.params.id, createdBy: req.user.id },
+      { _id: req.params.id, createdBy: req.user._id }, // ✅ FIXED
       updateData,
       { new: true }
     );
@@ -55,17 +60,19 @@ export const updateProperty = async (req, res) => {
 
     res.json(property);
   } catch (error) {
-    console.error(error);
+    console.error("Update property error:", error);
     res.status(400).json({ message: "Failed to update property" });
   }
 };
 
-// DELETE property (only owner)
+/* =========================================
+   DELETE PROPERTY (Owner Only)
+========================================= */
 export const deleteProperty = async (req, res) => {
   try {
     const property = await Property.findOneAndDelete({
       _id: req.params.id,
-      createdBy: req.user.id,
+      createdBy: req.user._id, // ✅ FIXED
     });
 
     if (!property) {
@@ -74,11 +81,14 @@ export const deleteProperty = async (req, res) => {
 
     res.json({ message: "Property deleted" });
   } catch (error) {
+    console.error("Delete property error:", error);
     res.status(500).json({ message: "Failed to delete property" });
   }
 };
 
-// GET all properties (public with filtering + pagination)
+/* =========================================
+   GET ALL PROPERTIES (Public + Filtering)
+========================================= */
 export const getAllProperties = async (req, res) => {
   try {
     const {
@@ -114,13 +124,8 @@ export const getAllProperties = async (req, res) => {
 
     let sortOption = { createdAt: -1 };
 
-    if (sort === "price_asc") {
-      sortOption = { price: 1 };
-    }
-
-    if (sort === "price_desc") {
-      sortOption = { price: -1 };
-    }
+    if (sort === "price_asc") sortOption = { price: 1 };
+    if (sort === "price_desc") sortOption = { price: -1 };
 
     const currentPage = Number(page);
     const perPage = Number(limit);
@@ -146,7 +151,9 @@ export const getAllProperties = async (req, res) => {
   }
 };
 
-// GET single property (public)
+/* =========================================
+   GET SINGLE PROPERTY (Public)
+========================================= */
 export const getPropertyById = async (req, res) => {
   try {
     const property = await Property.findById(req.params.id)
@@ -158,6 +165,7 @@ export const getPropertyById = async (req, res) => {
 
     res.json(property);
   } catch (error) {
+    console.error("Get property error:", error);
     res.status(500).json({ message: "Failed to fetch property" });
   }
 };
