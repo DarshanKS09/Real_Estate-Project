@@ -10,32 +10,43 @@ import {
 
 import { protect } from "../middlewares/authMiddleware.js";
 import { authorizeRoles } from "../middlewares/roleMiddleware.js";
-import upload from "../middlewares/uploadMiddleware.js"; // if using multer
+import upload from "../middlewares/uploadMiddleware.js";
 
 const router = express.Router();
 
-/* ===========================
-   PUBLIC ROUTES
-=========================== */
+/* ================= PUBLIC ROUTES ================= */
 
-// IMPORTANT: Specific routes FIRST
+// IMPORTANT: /my must come BEFORE /:id
+
 router.get("/", getAllProperties);
+
+router.get("/my", protect, authorizeRoles("agent"), getMyProperties);
+
 router.get("/:id", getPropertyById);
 
-/* ===========================
-   PROTECTED AGENT ROUTES
-=========================== */
+/* ================= PROTECTED AGENT ROUTES ================= */
 
-// Apply auth AFTER public routes
-router.use(protect, authorizeRoles("agent"));
+router.post(
+  "/",
+  protect,
+  authorizeRoles("agent"),
+  upload.array("images", 5),
+  createProperty
+);
 
-// IMPORTANT: /my must come BEFORE /:id in protected scope
-router.get("/my", getMyProperties);
+router.put(
+  "/:id",
+  protect,
+  authorizeRoles("agent"),
+  upload.array("images", 5),
+  updateProperty
+);
 
-router.post("/", upload.array("images", 5), createProperty);
-
-router.put("/:id", upload.array("images", 5), updateProperty);
-
-router.delete("/:id", deleteProperty);
+router.delete(
+  "/:id",
+  protect,
+  authorizeRoles("agent"),
+  deleteProperty
+);
 
 export default router;
