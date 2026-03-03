@@ -79,7 +79,7 @@ export const registerUser = async (req, res) => {
     await user.save();
 
     res.status(201).json({
-      message: "Registration successful. Please login.",
+      message: "Registration successful. Please login..",
     });
   } catch (error) {
     console.error("Register error:", error);
