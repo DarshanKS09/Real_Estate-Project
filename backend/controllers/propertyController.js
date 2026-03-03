@@ -82,7 +82,7 @@ export const deleteProperty = async (req, res) => {
     res.json({ message: "Property deleted" });
   } catch (error) {
     console.error("Delete property error:", error);
-    res.status(500).json({ message: "Failed to delete property" });
+    res.status(500).json({ message: "Failed to delete the property" });
   }
 };
 
