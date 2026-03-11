@@ -4,21 +4,14 @@ import api from "../api/axios";
 
 export default function Dashboard() {
   const navigate = useNavigate();
-
   const [user, setUser] = useState(null);
   const [properties, setProperties] = useState([]);
   const [showProfile, setShowProfile] = useState(false);
   const [loading, setLoading] = useState(true);
-
   const [location, setLocation] = useState("");
   const [sort, setSort] = useState("");
   const [propertyType, setPropertyType] = useState("");
-
-  const [profileForm, setProfileForm] = useState({
-    name: "",
-    phone: "",
-    address: "",
-  });
+  const [profileForm, setProfileForm] = useState({ name: "", phone: "", address: "" });
 
   useEffect(() => {
     api
@@ -40,14 +33,7 @@ export default function Dashboard() {
 
   const fetchProperties = async () => {
     try {
-      const res = await api.get("/properties", {
-        params: {
-          location,
-          sort,
-          propertyType,
-        },
-      });
-
+      const res = await api.get("/properties", { params: { location, sort, propertyType } });
       setProperties(res.data.properties);
     } catch (err) {
       console.error("Fetch properties error:", err);
@@ -65,181 +51,119 @@ export default function Dashboard() {
     setShowProfile(false);
   };
 
-  if (loading) {
+  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  if (!user)
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        Loading...
-      </div>
+      <div className="min-h-screen flex items-center justify-center text-red-600">Unauthorized</div>
     );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-red-500">
-        Unauthorized
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* HEADER */}
-      <div className="bg-white shadow">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-blue-600">
-            Welcome, {user.name}
-          </h1>
-
-          <div className="flex items-center gap-4">
-            <div
-              onClick={() => setShowProfile(!showProfile)}
-              className="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center cursor-pointer"
+    <div className="min-h-screen pb-10">
+      <header className="re-panel rounded-none border-x-0 border-t-0">
+        <div className="re-container py-4 flex items-center justify-between gap-4">
+          <div>
+            <p className="re-badge re-badge-soft mb-1">Buyer Dashboard</p>
+            <h1 className="text-2xl font-extrabold">Welcome, {user.name}</h1>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setShowProfile((prev) => !prev)}
+              className="w-10 h-10 rounded-full bg-slate-900 text-white font-bold hover:scale-105 transition"
+              title="Toggle Profile"
             >
               {user.name?.charAt(0).toUpperCase()}
-            </div>
-
-            <button
-              onClick={handleLogout}
-              className="bg-red-500 text-white px-3 py-1 rounded"
-            >
+            </button>
+            <button type="button" onClick={handleLogout} className="re-btn bg-red-600 text-white">
               Logout
             </button>
           </div>
         </div>
-      </div>
-      {/* PROFILE EDIT PANEL */}
-{showProfile && (
-  <div className="max-w-6xl mx-auto mt-6 bg-white p-6 rounded-xl shadow">
-    <h2 className="text-lg font-semibold mb-4">
-      My Profile
-    </h2>
+      </header>
 
-    <div className="space-y-3">
-      <input
-        type="text"
-        value={profileForm.name}
-        onChange={(e) =>
-          setProfileForm({
-            ...profileForm,
-            name: e.target.value,
-          })
-        }
-        className="w-full border p-2 rounded"
-        placeholder="Name"
-      />
-
-      <input
-        type="email"
-        value={user.email}
-        disabled
-        className="w-full border p-2 rounded bg-gray-100"
-      />
-
-      <input
-        type="text"
-        value={profileForm.phone}
-        onChange={(e) =>
-          setProfileForm({
-            ...profileForm,
-            phone: e.target.value,
-          })
-        }
-        className="w-full border p-2 rounded"
-        placeholder="Phone"
-      />
-
-      <textarea
-        value={profileForm.address}
-        onChange={(e) =>
-          setProfileForm({
-            ...profileForm,
-            address: e.target.value,
-          })
-        }
-        className="w-full border p-2 rounded"
-        placeholder="Address"
-      />
-
-      <button
-        onClick={handleSaveProfile}
-        className="bg-blue-600 text-white px-4 py-2 rounded"
-      >
-        Save Profile
-      </button>
-    </div>
-  </div>
-)}
-
-      {/* FILTER BAR */}
-      <div className="max-w-6xl mx-auto px-6 mt-8">
-        <div className="bg-white p-4 rounded-xl shadow flex flex-col md:flex-row gap-4">
-          <input
-            type="text"
-            placeholder="Enter Location..."
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            className="border p-2 rounded w-full md:w-1/3"
-          />
-
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value)}
-            className="border p-2 rounded w-full md:w-1/4"
-          >
-            <option value="">Sort By Price</option>
-            <option value="price_asc">Low → High</option>
-            <option value="price_desc">High → Low</option>
-          </select>
-
-          <select
-            value={propertyType}
-            onChange={(e) => setPropertyType(e.target.value)}
-            className="border p-2 rounded w-full md:w-1/4"
-          >
-            <option value="">All Types</option>
-            <option value="land">Land</option>
-            <option value="house">House</option>
-            <option value="apartment">Apartment</option>
-          </select>
-        </div>
-      </div>
-
-      {/* LISTINGS */}
-      <div className="max-w-6xl mx-auto px-6 py-10">
-        <h2 className="text-lg font-semibold mb-4">
-          Available Listings
-        </h2>
-
-        {properties.length === 0 && (
-          <p className="text-gray-500">No listings found.</p>
+      <main className="re-container mt-6 space-y-6">
+        {showProfile && (
+          <section className="re-panel p-6">
+            <h2 className="text-xl font-bold mb-4">My Profile</h2>
+            <div className="grid md:grid-cols-2 gap-3">
+              <input
+                className="re-input"
+                value={profileForm.name}
+                onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                placeholder="Name"
+              />
+              <input className="re-input bg-slate-100" value={user.email} disabled />
+              <input
+                className="re-input"
+                value={profileForm.phone}
+                onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                placeholder="Phone"
+              />
+              <textarea
+                className="re-textarea md:col-span-2"
+                value={profileForm.address}
+                onChange={(e) => setProfileForm({ ...profileForm, address: e.target.value })}
+                placeholder="Address"
+              />
+            </div>
+            <button type="button" onClick={handleSaveProfile} className="re-btn re-btn-primary mt-4">
+              Save Profile
+            </button>
+          </section>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {properties.map((p) => (
-            <div
-              key={p._id}
-              onClick={() => navigate(`/property/${p._id}`)}
-              className="bg-white p-5 rounded-xl shadow cursor-pointer hover:shadow-lg transition"
+        <section className="re-panel p-5">
+          <h2 className="text-xl font-bold mb-4">Search & Filter</h2>
+          <div className="grid md:grid-cols-3 gap-3">
+            <input
+              className="re-input"
+              type="text"
+              placeholder="Enter Location..."
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+            />
+            <select className="re-select" value={sort} onChange={(e) => setSort(e.target.value)}>
+              <option value="">Sort By Price</option>
+              <option value="price_asc">Low to High</option>
+              <option value="price_desc">High to Low</option>
+            </select>
+            <select
+              className="re-select"
+              value={propertyType}
+              onChange={(e) => setPropertyType(e.target.value)}
             >
-              <h3 className="font-semibold text-blue-600">
-                {p.title}
-              </h3>
+              <option value="">All Types</option>
+              <option value="land">Land</option>
+              <option value="house">House</option>
+              <option value="apartment">Apartment</option>
+            </select>
+          </div>
+        </section>
 
-              <p className="text-sm text-gray-600">
-                {p.location}
-              </p>
-
-              <p className="text-sm font-medium mt-1">
-                ₹{p.price}
-              </p>
-
-              <p className="text-xs text-gray-500 mt-1">
-                Type: {p.propertyType}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
+        <section>
+          <h2 className="text-2xl font-extrabold mb-4">Available Listings</h2>
+          {properties.length === 0 && <p className="text-slate-600">No listings found.</p>}
+          <div className="grid md:grid-cols-2 gap-5">
+            {properties.map((p) => (
+              <article
+                key={p._id}
+                onClick={() => navigate(`/property/${p._id}`)}
+                className="re-card p-5 cursor-pointer"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900">{p.title}</h3>
+                    <p className="text-slate-600">{p.location}</p>
+                  </div>
+                  <span className="re-badge re-badge-soft">{p.propertyType}</span>
+                </div>
+                <p className="text-2xl font-extrabold mt-4">Rs {p.price}</p>
+                <p className="text-sm text-slate-500 mt-1">Click to open full details</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      </main>
     </div>
   );
 }

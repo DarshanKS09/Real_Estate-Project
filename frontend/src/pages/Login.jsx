@@ -1,34 +1,23 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../api/axios";
 
 export default function Login() {
   const navigate = useNavigate();
-
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-  });
-
   const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({ email: "", password: "" });
 
   const handleChange = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
       setLoading(true);
       const res = await api.post("/auth/login", form);
       const loggedInUser = res.data;
-
-      // ✅ Redirect based on role from backend
-      if (loggedInUser.role === "agent") {
-        navigate("/agent/dashboard");
-      } else {
-        navigate("/dashboard");
-      }
+      if (loggedInUser.role === "agent") navigate("/agent/dashboard");
+      else navigate("/dashboard");
     } catch (err) {
       alert(err.response?.data?.message || "Login failed");
     } finally {
@@ -37,50 +26,40 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-black">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-2xl p-8">
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
-          Login
-        </h2>
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="re-panel w-full max-w-md p-7">
+        <p className="re-badge re-badge-soft mb-3">Account Access</p>
+        <h1 className="text-3xl font-extrabold mb-2">Welcome Back</h1>
+        <p className="text-slate-600 mb-6">Sign in to continue browsing properties.</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
+            className="re-input"
             name="email"
             type="email"
             placeholder="Email"
             required
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
             onChange={handleChange}
           />
-
           <input
+            className="re-input"
             name="password"
             type="password"
             placeholder="Password"
             required
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
             onChange={handleChange}
           />
-
-          <button
-            disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
-          >
+          <button disabled={loading} className="re-btn re-btn-primary w-full">
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
 
-        <div className="text-center mt-6">
-          <p className="text-sm text-gray-500">
-            New user?{" "}
-            <Link
-              to="/register"
-              className="text-blue-600 font-semibold hover:underline"
-            >
-              Register here
-            </Link>
-          </p>
-        </div>
+        <p className="text-sm text-slate-600 mt-5">
+          New user?{" "}
+          <Link to="/register" className="font-semibold text-blue-700 hover:underline">
+            Register here
+          </Link>
+        </p>
       </div>
     </div>
   );

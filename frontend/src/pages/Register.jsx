@@ -1,31 +1,22 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../api/axios";
 
 export default function Register() {
   const navigate = useNavigate();
-
   const [role, setRole] = useState("user");
   const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    otp: "",
-    password: "",
-  });
+  const [form, setForm] = useState({ name: "", email: "", otp: "", password: "" });
 
   const handleChange = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
-  // 1️⃣ Send OTP
   const sendOtp = async () => {
     if (!form.email) {
       alert("Please enter email first");
       return;
     }
-
     try {
       setLoading(true);
       await api.post("/auth/send-otp", { email: form.email });
@@ -38,10 +29,8 @@ export default function Register() {
     }
   };
 
-  // 2️⃣ Final Registration (OTP + Password)
   const handleRegister = async (e) => {
     e.preventDefault();
-
     try {
       setLoading(true);
       await api.post("/auth/register", {
@@ -51,7 +40,6 @@ export default function Register() {
         otp: form.otp,
         role,
       });
-
       alert("Registration successful. Please login.");
       navigate("/login");
     } catch (err) {
@@ -62,110 +50,86 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-black">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-2xl p-8">
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
-          Create Account
-        </h2>
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="re-panel w-full max-w-lg p-7">
+        <p className="re-badge re-badge-soft mb-3">Create Account</p>
+        <h1 className="text-3xl font-extrabold mb-6">Join As Buyer Or Agent</h1>
 
-        {/* Role Selector */}
-        <div className="flex mb-6 rounded-lg overflow-hidden border">
+        <div className="grid grid-cols-2 gap-2 mb-5">
           <button
             type="button"
             onClick={() => setRole("user")}
-            className={`flex-1 py-2 font-semibold ${
-              role === "user"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-600"
-            }`}
+            className={`re-btn ${role === "user" ? "re-btn-primary" : "re-btn-ghost"}`}
           >
             User
           </button>
           <button
             type="button"
             onClick={() => setRole("agent")}
-            className={`flex-1 py-2 font-semibold ${
-              role === "agent"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-600"
-            }`}
+            className={`re-btn ${role === "agent" ? "re-btn-primary" : "re-btn-ghost"}`}
           >
             Agent
           </button>
         </div>
 
-        <form onSubmit={handleRegister} className="space-y-4">
+        <form onSubmit={handleRegister} className="space-y-3">
           <input
             name="name"
+            className="re-input"
             placeholder="Full Name"
             required
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
             onChange={handleChange}
           />
-
           <input
             name="email"
             type="email"
+            className="re-input"
             placeholder="Email"
             required
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
             onChange={handleChange}
           />
 
-          {/* Send OTP */}
           {!otpSent && (
             <button
               type="button"
               onClick={sendOtp}
               disabled={loading}
-              className="w-full bg-gray-800 text-white py-2 rounded-lg hover:bg-gray-900 transition disabled:opacity-50"
+              className="re-btn re-btn-primary w-full"
             >
               {loading ? "Sending OTP..." : "Send OTP"}
             </button>
           )}
 
-          {/* OTP + Password */}
           {otpSent && (
             <>
               <input
                 name="otp"
+                className="re-input"
                 placeholder="Enter OTP"
                 required
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                 onChange={handleChange}
               />
-
               <input
                 name="password"
                 type="password"
+                className="re-input"
                 placeholder="Set Password"
                 required
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                 onChange={handleChange}
               />
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
-              >
+              <button disabled={loading} type="submit" className="re-btn re-btn-primary w-full">
                 {loading ? "Registering..." : `Register as ${role}`}
               </button>
             </>
           )}
         </form>
 
-        <div className="text-center mt-6">
-          <p className="text-sm text-gray-500">
-            Already have an account?{" "}
-            <Link
-              to="/login"
-              className="text-blue-600 font-semibold hover:underline"
-            >
-              Login
-            </Link>
-          </p>
-        </div>
+        <p className="text-sm text-slate-600 mt-5">
+          Already have an account?{" "}
+          <Link to="/login" className="font-semibold text-blue-700 hover:underline">
+            Login
+          </Link>
+        </p>
       </div>
     </div>
   );

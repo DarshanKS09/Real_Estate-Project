@@ -1,97 +1,106 @@
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
+const themes = {
+  ocean: {
+    label: "Ocean Blue",
+    hero: "from-sky-950 via-cyan-900 to-blue-800",
+    chip: "bg-sky-100 text-sky-800",
+    ring: "ring-sky-400",
+  },
+  forest: {
+    label: "Forest Green",
+    hero: "from-emerald-950 via-teal-900 to-green-800",
+    chip: "bg-emerald-100 text-emerald-800",
+    ring: "ring-emerald-400",
+  },
+  sunset: {
+    label: "Sunset Gold",
+    hero: "from-amber-950 via-orange-900 to-yellow-800",
+    chip: "bg-amber-100 text-amber-900",
+    ring: "ring-amber-400",
+  },
+};
+
 export default function Home() {
+  const [themeKey, setThemeKey] = useState("ocean");
+  const theme = useMemo(() => themes[themeKey], [themeKey]);
+
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white">
-        <div className="max-w-6xl mx-auto px-6 py-20 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6">
-            Find Your Perfect Property
-          </h1>
-
-          <p className="text-lg md:text-xl mb-8 text-blue-100">
-            Buy, rent, or explore properties with trusted agents.
-            Simple. Secure. Reliable.
-          </p>
-
-          <div className="flex justify-center gap-4">
-            <Link
-              to="/login"
-              className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition"
-            >
-              Explore Properties
-            </Link>
-
-            <Link
-              to="/login"
-              className="border border-white px-6 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition"
-            >
-              Login
-            </Link>
+    <div className="min-h-screen pb-10">
+      <section className={`bg-gradient-to-br ${theme.hero} text-white`}>
+        <div className="re-container py-20">
+          <div className="max-w-3xl">
+            <p className={`inline-flex re-badge ${theme.chip} mb-6`}>
+              Premium Real Estate Experience
+            </p>
+            <h1 className="text-4xl md:text-6xl font-extrabold leading-tight">
+              Find homes, apartments and land with a modern property workflow.
+            </h1>
+            <p className="mt-6 text-lg text-slate-200">
+              Explore verified listings, connect with trusted agents and manage your
+              interest in one place.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link to="/login" className="re-btn re-btn-primary px-6 py-3">
+                Explore Listings
+              </Link>
+              <Link
+                to="/register"
+                className="re-btn bg-white/10 border border-white/40 text-white px-6 py-3 hover:bg-white/20"
+              >
+                Create Account
+              </Link>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Features Section */}
-      <div className="max-w-6xl mx-auto px-6 py-16">
-        <h2 className="text-3xl font-bold text-center mb-12">
-          Why Choose Us
-        </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="bg-white p-6 rounded-xl shadow">
-            <h3 className="text-xl font-semibold mb-3">
-              Verified Listings
-            </h3>
-            <p className="text-gray-600">
-              All properties are listed by verified agents to ensure trust and transparency.
-            </p>
-          </div>
-
-          <div className="bg-white p-6 rounded-xl shadow">
-            <h3 className="text-xl font-semibold mb-3">
-              Trusted Agents
-            </h3>
-            <p className="text-gray-600">
-              Work directly with professional real estate agents with proven track records.
-            </p>
-          </div>
-
-          <div className="bg-white p-6 rounded-xl shadow">
-            <h3 className="text-xl font-semibold mb-3">
-              Secure Platform
-            </h3>
-            <p className="text-gray-600">
-              Your data and interactions are protected with modern security standards.
-            </p>
+      <section className="re-container -mt-8">
+        <div className="re-panel p-5 md:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-lg font-bold">Theme Selector</h2>
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(themes).map(([key, value]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setThemeKey(key)}
+                  className={`re-btn re-btn-ghost ${
+                    themeKey === key ? `ring-2 ${value.ring}` : ""
+                  }`}
+                >
+                  {value.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Call to Action */}
-      <div className="bg-white py-16">
-        <div className="max-w-4xl mx-auto text-center px-6">
-          <h2 className="text-3xl font-bold mb-4">
-            Ready to Get Started?
-          </h2>
-          <p className="text-gray-600 mb-8">
-            Login now to explore properties or manage listings as an agent.
-          </p>
-
-          <Link
-            to="/login"
-            className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
-          >
-            Get Started
-          </Link>
+      <section className="re-container py-12">
+        <h2 className="text-3xl font-extrabold mb-8">Why It Feels Better</h2>
+        <div className="grid md:grid-cols-3 gap-5">
+          <article className="re-card p-6">
+            <h3 className="text-xl font-bold mb-2">Verified Inventory</h3>
+            <p className="text-slate-600">
+              Every listing comes from a registered agent profile to reduce fake entries.
+            </p>
+          </article>
+          <article className="re-card p-6">
+            <h3 className="text-xl font-bold mb-2">Fast Discovery</h3>
+            <p className="text-slate-600">
+              Filter by location, price and property type with responsive interaction.
+            </p>
+          </article>
+          <article className="re-card p-6">
+            <h3 className="text-xl font-bold mb-2">Direct Contact</h3>
+            <p className="text-slate-600">
+              Send inquiry messages instantly to agents from the property detail page.
+            </p>
+          </article>
         </div>
-      </div>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 text-center py-6">
-        © {new Date().getFullYear()} RealEstate Platform. All rights reserved.
-      </footer>
+      </section>
     </div>
   );
 }
