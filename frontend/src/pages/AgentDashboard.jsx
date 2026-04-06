@@ -120,7 +120,7 @@ export default function AgentDashboard() {
         <div className="re-container py-4 flex items-center justify-between gap-4">
           <div>
             <p className="re-badge re-badge-soft mb-1">Agent Workspace</p>
-            <h1 className="text-2xl font-extrabold">HELLO, {user?.name || "Agent"}</h1>
+            <h1 className="text-2xl font-extrabold">Hello, {user?.name || "Agent"}</h1>
           </div>
           <div className="relative flex items-center gap-3">
             <button
