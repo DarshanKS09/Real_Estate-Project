@@ -112,7 +112,7 @@ export default function AgentDashboard() {
     fetchMyProperties();
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading..</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 
   return (
     <div className="min-h-screen pb-10">
