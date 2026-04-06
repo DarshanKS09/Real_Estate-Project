@@ -30,7 +30,7 @@ export default function Login() {
       <div className="re-panel w-full max-w-md p-7">
         <p className="re-badge re-badge-soft mb-3">Account Access</p>
         <h1 className="text-3xl font-extrabold mb-2">Welcome Back</h1>
-        <p className="text-slate-600 mb-6">Sign in to continue browsing the properties.</p>
+        <p className="text-slate-600 mb-6">Sign in to continue browsing properties.</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
